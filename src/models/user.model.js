@@ -39,6 +39,10 @@ const userSchema = new Schema({
         type: String, //Hashed password
         required: true
     },
+    isEmailVerified: {
+        type: Boolean,
+        default: false
+    },
     role: {
         type: String,
         enum: ["explorer", "admin"],
@@ -60,6 +64,10 @@ const userSchema = new Schema({
     },
     followingRoadmaps: {
         type: [followingRoadmapSchema]
+    },
+    refreshToken: {
+        type: String,
+        default: ""
     }
 }, {timestamps: true})
 
