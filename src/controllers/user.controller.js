@@ -4,6 +4,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
 import jwt from "jsonwebtoken";
 import { validationResult } from "express-validator";
+import { sendHtmlMail } from "../utils/mailer.js";
 
 
 const generateAccessAndRefreshToken = async (userId) => {
@@ -190,4 +191,42 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     }
 
 })
-export {registerUser, loginUser, logoutUser, refreshAccessToken, isUsernameAvailable, isEmailAvailable}
+
+const verifyEmail = asyncHandler(async (req, res) => {
+
+    const {email} = req.body
+
+    //find user by email
+    const user = await User.findOne({email})
+
+    if (!user) {
+        throw new ApiError(404, "No user found with given Email");
+    }
+
+    //generate OTP
+    const otp =  Math.floor(Math.random() * (9999 - 1000) + 1000);
+
+    //save OTP
+    //todo
+
+    //send OTP via mail
+    await sendHtmlMail({
+        to: email,
+        subject: "Verify your email to complete registration",
+        htmlFilePath: 'otpMail.html',
+        variables: {
+            fullName: user.fullName,
+            otp
+        }
+    })
+
+    //send response
+    res
+    .status(200)
+    .json(new ApiResponse(
+        200, 
+        {}, 
+        "OTP sent to email successfully"
+    ))
+})
+export {registerUser, loginUser, logoutUser, refreshAccessToken, isUsernameAvailable, isEmailAvailable, verifyEmail}

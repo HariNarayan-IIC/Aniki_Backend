@@ -24,6 +24,8 @@
       display: block;
       margin: 0 auto 30px auto;
       max-width: 150px;
+      text-align: center;
+      font-weight: 700;
     }
     h1 {
       color: #004080;
@@ -72,10 +74,10 @@
 </head>
 <body>
   <div class="container" role="main" aria-label="OTP Verification Email">
-    <img src="https://your-company-logo-url.com/logo.png" alt="Company Logo" class="logo" />
-    <h1>Hello Alex Johnson,</h1>
+    <div class="logo" style="text-decoration: double;"><i>Aniki</i></div>
+    <h1>Hello {{fullName}},</h1>
     <p>Your One-Time Password (OTP) for secure verification is:</p>
-    <span class="otp-code" aria-label="Your OTP code">9876</span>
+    <span class="otp-code" aria-label="Your OTP code">{{otp}}</span>
     <p>Please enter this code within the next 10 minutes to complete your verification process.</p>
     <p>If you did not request this code, please ignore this email or contact support immediately.</p>
     <div class="footer">

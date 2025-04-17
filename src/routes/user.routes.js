@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { registerUser, loginUser, logoutUser, refreshAccessToken, isUsernameAvailable, isEmailAvailable } from "../controllers/user.controller.js";
+import { registerUser, loginUser, logoutUser, refreshAccessToken, isUsernameAvailable, isEmailAvailable, verifyEmail } from "../controllers/user.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { body, checkExact } from "express-validator";
 
@@ -10,10 +10,6 @@ router.route("/register").post(
     body('*')
         .trim().notEmpty().withMessage("Field cannot be empty"),
 
-    body('fullName')
-        .isLength({min: 2}).withMessage("fullName should be atleast 2 char long")
-        .matches(/^[\p{L} .'-]+$/u),
-
     body('username')
         .isLength({min: 6}).withMessage("Username must be atleast 6 digit long")
         .custom(isUsernameAvailable)
@@ -21,6 +17,10 @@ router.route("/register").post(
 
     body('email').isEmail()
         .custom(isEmailAvailable),
+
+    body('fullName')
+        .isLength({min: 2}).withMessage("fullName should be atleast 2 char long")
+        .matches(/^[\p{L} .'-]+$/u),
 
     body('password')
         .isStrongPassword().withMessage("Weak password"),
@@ -31,7 +31,10 @@ router.route("/register").post(
 )
 router.route("/login").post(loginUser)
 router.route("/refreshAccessToken").post(refreshAccessToken)
-//router.route("/verify-email").post()
+router.route("/verify-email").post(
+    body('email').isEmail(),
+    verifyEmail
+)
 
 //secured routes
 router.route("/logout").post(verifyJWT, logoutUser)
