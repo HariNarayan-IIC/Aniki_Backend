@@ -5,6 +5,7 @@ import { User } from "../models/user.model.js";
 import jwt from "jsonwebtoken";
 import { validationResult } from "express-validator";
 import { sendHtmlMail } from "../utils/mailer.js";
+import { OTP } from "../models/otp.model.js";
 
 
 const generateAccessAndRefreshToken = async (userId) => {
@@ -205,9 +206,13 @@ const verifyEmail = asyncHandler(async (req, res) => {
 
     //generate OTP
     const otp =  Math.floor(Math.random() * (9999 - 1000) + 1000);
+    console.log("Otp: ", otp);
 
     //save OTP
-    //todo
+    await OTP.create({
+        user_id: user._id,
+        otp
+    })
 
     //send OTP via mail
     await sendHtmlMail({
@@ -229,4 +234,49 @@ const verifyEmail = asyncHandler(async (req, res) => {
         "OTP sent to email successfully"
     ))
 })
-export {registerUser, loginUser, logoutUser, refreshAccessToken, isUsernameAvailable, isEmailAvailable, verifyEmail}
+
+const validateOTP = asyncHandler(async (req, res) => {
+    //get otp and email
+    const {otp, email} = req.body
+
+    //find user with email
+    const user = await User.findOne({email})
+    if (!user) {
+        throw new ApiError(400, "Invalid email")
+    }
+
+    //find otp using user._id
+    const otpInDB= await OTP.findOne({user_id: user._id})
+    if (!otpInDB){
+        throw new ApiError(404, "OTP expired")
+    }
+
+    //compare otp
+    if (otp != otpInDB.otp) {
+        throw new ApiError(400, "Incorrect OTP")
+    }
+    //update user isEmailVerified to true
+    user.isEmailVerified= true
+    await user.save({validateBeforeSave: false})
+
+    // Send access and refresh token in response cookie
+    const {accessToken, refreshToken} = await generateAccessAndRefreshToken(user._id)
+    const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
+
+    const options = {
+        httpOnly: true,
+        secure: true
+    }
+
+    res
+    .status(200)
+    .cookie("accessToken" ,accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
+    .json(new ApiResponse(
+        200, 
+        {user: loggedInUser, accessToken, refreshToken}, 
+        "Loggin successful"
+    ))
+
+})
+export {registerUser, loginUser, logoutUser, refreshAccessToken, isUsernameAvailable, isEmailAvailable, verifyEmail, validateOTP}

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { registerUser, loginUser, logoutUser, refreshAccessToken, isUsernameAvailable, isEmailAvailable, verifyEmail } from "../controllers/user.controller.js";
+import { registerUser, loginUser, logoutUser, refreshAccessToken, isUsernameAvailable, isEmailAvailable, verifyEmail, validateOTP } from "../controllers/user.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { body, checkExact } from "express-validator";
 
@@ -35,9 +35,16 @@ router.route("/verify-email").post(
     body('email').isEmail(),
     verifyEmail
 )
+router.route("/validate-otp").post(
+    body('email').isEmail(),
+    body('otp').isLength({min: 4, max: 4}).withMessage("otp must be 4 digit long"),
+    validateOTP
+)
+//Forgot password
+//signup with Google
 
 //secured routes
 router.route("/logout").post(verifyJWT, logoutUser)
-
+//Update User profile
 
 export default router
