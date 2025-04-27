@@ -2,6 +2,7 @@ import { Router } from "express";
 import { registerUser, loginUser, logoutUser, refreshAccessToken, isUsernameAvailable, isEmailAvailable, verifyEmail, validateOTP } from "../controllers/user.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { body, checkExact } from "express-validator";
+import { ApiResponse } from "../utils/ApiResponse.js";
 
 const router = Router()
 
@@ -44,6 +45,12 @@ router.route("/validate-otp").post(
 //signup with Google
 
 //secured routes
+router.route("/me").post(verifyJWT,(req, res)=> {
+    return res
+        .status(200)
+        .json(new ApiResponse(200,{user: req.user},"User verification successful"))
+    }
+)
 router.route("/logout").post(verifyJWT, logoutUser)
 //Update User profile
 

@@ -24,6 +24,7 @@ const generateAccessAndRefreshToken = async (userId) => {
     }
 }
 
+
 const isUsernameAvailable= async (username) => {
 
     const user = await User.findOne({ username: { $regex: `^${username}$`, $options: 'i' } })
@@ -118,7 +119,7 @@ const loginUser = asyncHandler(async (req, res) => {
 
     const options = {
         httpOnly: true,
-        secure: true
+        secure: false
     }
 
     res
@@ -153,13 +154,14 @@ const logoutUser = asyncHandler(async (req, res) => {
 })
 
 const refreshAccessToken = asyncHandler(async (req, res) => {
-    const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken
-
-    if (!incomingRefreshToken) {
-        throw new ApiError(401, "Unauthorized request");
-    }
 
     try {
+        const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken
+
+        if (!incomingRefreshToken || incomingRefreshToken=="") {
+            throw new ApiError(401, "Unauthorized request");
+        }
+
         const decodedToken = jwt.verify(
             incomingRefreshToken,
             process.env.REFRESH_TOKEN_SECRET
@@ -180,12 +182,12 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
             secure: true
         }
     
-        const {accessToken, newRefreshToken} = await generateAccessAndRefreshToken(user._id)
+        const accessToken = await user.generateAccessToken()
     
         return res
         .status(200)
-        .cookie("accessToken", accessToken)
-        .cookie("refreshToken", newRefreshToken)
+        .cookie("accessToken", accessToken, options)
+        .json(new ApiResponse(200,{accessToken},"Successfully refreshed access token"))
     } catch (error) {
         throw new ApiError(401, error?.message || "Invalid refresh token");
         
