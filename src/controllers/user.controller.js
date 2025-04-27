@@ -8,6 +8,9 @@ import { sendHtmlMail } from "../utils/mailer.js";
 import { OTP } from "../models/otp.model.js";
 
 
+const isProduction = process.env.NODE_ENV === "production"
+
+
 const generateAccessAndRefreshToken = async (userId) => {
     try {
         const user = await User.findById(userId)
@@ -119,7 +122,7 @@ const loginUser = asyncHandler(async (req, res) => {
 
     const options = {
         httpOnly: true,
-        secure: false
+        secure: isProduction
     }
 
     res
@@ -143,7 +146,7 @@ const logoutUser = asyncHandler(async (req, res) => {
 
     const options = {
         httpOnly: true,
-        secure: true
+        secure: isProduction
     }
 
     return res
@@ -179,7 +182,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     
         const options = {
             httpOnly: true,
-            secure: true
+            secure: isProduction
         }
     
         const accessToken = await user.generateAccessToken()
@@ -267,7 +270,7 @@ const validateOTP = asyncHandler(async (req, res) => {
 
     const options = {
         httpOnly: true,
-        secure: true
+        secure: isProduction
     }
 
     res
