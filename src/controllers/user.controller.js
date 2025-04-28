@@ -274,7 +274,7 @@ const validateOTP = asyncHandler(async (req, res) => {
     const options = {
         httpOnly: true,
         secure: isProduction,
-        sameSite: isProduction?"none":true
+        sameSite: "none"
     }
 
     res
