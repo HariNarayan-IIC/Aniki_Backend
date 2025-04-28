@@ -122,7 +122,8 @@ const loginUser = asyncHandler(async (req, res) => {
 
     const options = {
         httpOnly: true,
-        secure: isProduction
+        secure: isProduction,
+        sameSite: isProduction?"none":true
     }
 
     res
@@ -146,7 +147,8 @@ const logoutUser = asyncHandler(async (req, res) => {
 
     const options = {
         httpOnly: true,
-        secure: isProduction
+        secure: isProduction,
+        sameSite: isProduction?"none":true
     }
 
     return res
@@ -182,7 +184,8 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     
         const options = {
             httpOnly: true,
-            secure: isProduction
+            secure: isProduction,
+            sameSite: isProduction?"none":true
         }
     
         const accessToken = await user.generateAccessToken()
@@ -270,7 +273,8 @@ const validateOTP = asyncHandler(async (req, res) => {
 
     const options = {
         httpOnly: true,
-        secure: isProduction
+        secure: isProduction,
+        sameSite: isProduction?"none":true
     }
 
     res
