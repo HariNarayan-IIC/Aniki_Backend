@@ -13,7 +13,8 @@ console.log(`isProduction: ${isProduction}`)
 const options = {
     httpOnly: true,
     secure: isProduction,
-    sameSite: isProduction ? "none" : "lax"  // <-- use "lax" for development
+    sameSite: isProduction ? "none" : "lax",  // <-- use "lax" for development
+    maxAge: 10 * 24 * 60 * 60 * 1000, // <-- 10 days in milliseconds
 };
 
 const generateAccessAndRefreshToken = async (userId) => {
