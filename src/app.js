@@ -19,9 +19,7 @@ app.use(logger)
 
 //Dummy route for testing
 app.get("/", (req, res) => {
-    return res.status(200).json({
-        "Salutation": "Hello World"
-    })
+    return res.status(200).send("<h1>Welcome to Aniki</h1>")
 })
 
 
