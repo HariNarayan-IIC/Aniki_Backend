@@ -17,6 +17,13 @@ app.use(express.static("public"))
 app.use(cookieParser())
 app.use(logger)
 
+//Dummy route for testing
+app.get("/", (req, res) => {
+    return res.status(200).json({
+        "Salutation": "Hello World"
+    })
+})
+
 
 //routes import 
 import userRouter from './routes/user.routes.js';
