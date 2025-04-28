@@ -9,7 +9,12 @@ import { OTP } from "../models/otp.model.js";
 
 
 const isProduction = process.env.NODE_ENV === "production"
-
+console.log(`isProduction: ${isProduction}`)
+const options = {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "lax"  // <-- use "lax" for development
+};
 
 const generateAccessAndRefreshToken = async (userId) => {
     try {
@@ -120,11 +125,6 @@ const loginUser = asyncHandler(async (req, res) => {
     const {accessToken, refreshToken} = await generateAccessAndRefreshToken(user._id)
     const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
 
-    const options = {
-        httpOnly: true,
-        secure: isProduction,
-        sameSite: isProduction?"none":true
-    }
 
     res
     .status(200)
@@ -145,11 +145,6 @@ const logoutUser = asyncHandler(async (req, res) => {
         {new: true}
     )
 
-    const options = {
-        httpOnly: true,
-        secure: isProduction,
-        sameSite: isProduction?"none":true
-    }
 
     return res
     .status(200)
@@ -182,12 +177,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
             throw new ApiError( 401, "Refresh token is expired or used")
         }
     
-        const options = {
-            httpOnly: true,
-            secure: isProduction,
-            sameSite: isProduction?"none":true
-        }
-    
+
         const accessToken = await user.generateAccessToken()
     
         return res
@@ -271,11 +261,7 @@ const validateOTP = asyncHandler(async (req, res) => {
     const {accessToken, refreshToken} = await generateAccessAndRefreshToken(user._id)
     const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
 
-    const options = {
-        httpOnly: true,
-        secure: isProduction,
-        sameSite: "none"
-    }
+
 
     res
     .status(200)
