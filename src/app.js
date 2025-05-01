@@ -39,11 +39,13 @@ app.get("/", (req, res) => {
 
 //routes import 
 import userRouter from './routes/user.routes.js';
-import { ApiError } from "./utils/ApiError.js"
+import roadmapRouter from './routes/roadmap.routes.js';
+import { ApiError } from "./utils/ApiError.js";
 
 
 //routes declaration
-app.use("/api/v1/users", userRouter)
+app.use("/api/v1/users", userRouter);
+app.use("/api/v1/roadmap", roadmapRouter);
 
 
 //error middleware must be placed after routes (Order of app.use matters)
