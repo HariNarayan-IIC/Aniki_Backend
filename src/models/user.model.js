@@ -2,18 +2,6 @@ import mongoose, {Schema} from "mongoose";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
-const followingRoadmapSchema = new Schema({
-    roadmapId: {
-        type: Schema.Types.ObjectId,
-        ref: "Roadmap"
-    },
-    completedMilestones: [
-        {
-            type: Schema.Types.ObjectId,
-            ref: "Milestone"
-        }
-    ]
-}, {timestamps: true})
 
 const userSchema = new Schema({
     fullName: {
@@ -61,9 +49,6 @@ const userSchema = new Schema({
         type: String,
         enum: ["Active", "Inactive", "Deleted", "Banned"],
         default: "Active"
-    },
-    followingRoadmaps: {
-        type: [followingRoadmapSchema]
     },
     refreshToken: {
         type: String,
