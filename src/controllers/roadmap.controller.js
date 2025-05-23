@@ -1,7 +1,5 @@
 import { Roadmap } from "../models/roadmap.model.js";
-import { UserRoadmap } from "../models/userRoadmap.model.js";
 import { ApiError } from "../utils/ApiError.js";
-import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import mongoose from "mongoose";
 
@@ -18,7 +16,7 @@ const buildRoadmapPipeline = (userId, matchId = null) => {
     pipeline.push(
         {
             $lookup: {
-                from: "userroadmaps",
+                from: "followedroadmaps",
                 localField: "_id",
                 foreignField: "roadmapId",
                 as: "followers",
@@ -139,29 +137,3 @@ export const deleteRoadmap = asyncHandler(async (req, res) => {
     res.json({ message: "Roadmap deleted" });
 });
 
-export const followRoadmap = asyncHandler(async (req, res) => {
-    const user = req.user;
-    const roadmap = await Roadmap.findById(req.params.id);
-    if (!roadmap) {
-        throw new ApiError(404, "Roadmap not found");
-    }
-
-    if (
-        await UserRoadmap.findOne({ userId: user._id, roadmapId: roadmap._id })
-    ) {
-        throw new ApiError(400, "UserRoadmap already exists");
-    }
-    const newUserRoadmap = await UserRoadmap.create({
-        userId: user._id,
-        roadmapId: roadmap._id,
-        completedMilestones: [],
-    });
-
-    res.status(200).json(
-        new ApiResponse(
-            200,
-            { userRoadmap: newUserRoadmap },
-            "Roadmap followed successfully"
-        )
-    );
-});
