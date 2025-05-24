@@ -10,6 +10,12 @@ const nodeSchema = new Schema({
     y: { type: Number, required: true },
   },
   style: { type: Object }, // optional styling info
+  description: {type: String},
+  resources: [{
+    resourceLabel: {type: String, required: true},
+    resourceType: {type: String, enum: ["Blog", "Article", "Book", "Video", "Paper", "Course"], required: true},
+    resourceURL: {type: String, required: true }
+  }]
 });
 
 const edgeSchema = new Schema({

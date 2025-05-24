@@ -20,7 +20,7 @@ const followedRoadmapSchema = new Schema({
       },
       status: {
         type: String,
-        enum: ["pending", "inProgress", "completed", "skipped"],
+        enum: ["pending", "inProgress", "done", "skipped"],
         default: "pending"
       }
     }

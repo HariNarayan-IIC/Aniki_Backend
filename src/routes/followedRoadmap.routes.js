@@ -16,7 +16,7 @@ router.route("/:id").put(
         .custom((value) => mongoose.Types.ObjectId.isValid(value))
         .withMessage('Invalid milestoneId'),
     body('status')
-        .isIn(['inProgress', 'pending', 'skip', 'done'])
+        .isIn(['inProgress', 'pending', 'skipped', 'done'])
         .withMessage('Invalid status value'),
     updateMilestones
 );

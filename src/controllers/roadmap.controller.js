@@ -6,7 +6,7 @@ import mongoose from "mongoose";
 const buildRoadmapPipeline = (userId, matchId = null) => {
     const pipeline = [];
 
-    // Optional match stage if filtering by roadmap ID
+    // Optional match for a specific roadmap
     if (matchId) {
         pipeline.push({
             $match: { _id: new mongoose.Types.ObjectId(matchId) },
@@ -39,30 +39,126 @@ const buildRoadmapPipeline = (userId, matchId = null) => {
                         0,
                     ],
                 },
+                userFollowDoc: {
+                    $first: {
+                        $filter: {
+                            input: "$followers",
+                            as: "f",
+                            cond: { $eq: ["$$f.userId", userId] },
+                        },
+                    },
+                },
+            },
+        },
+        {
+            $addFields: {
+                progress: {
+                    $let: {
+                        vars: {
+                            matchedMilestones: {
+                                $filter: {
+                                    input: {
+                                        $ifNull: [
+                                            "$userFollowDoc.milestoneStates",
+                                            [],
+                                        ],
+                                    },
+                                    as: "ms",
+                                    cond: { $eq: ["$$ms.status", "done"] },
+                                },
+                            },
+                        },
+                        in: {
+                            $cond: [
+                                { $gt: [{ $size: "$nodes" }, 0] },
+                                {
+                                    $divide: [
+                                        { $size: "$$matchedMilestones" },
+                                        { $size: "$nodes" },
+                                    ],
+                                },
+                                0,
+                            ],
+                        },
+                    },
+                },
             },
         }
-        
     );
 
-    if (!matchId) {
+    if (matchId) {
+        // Add status to each node
+        pipeline.push(
+            {
+                $addFields: {
+                    nodes: {
+                        $map: {
+                            input: "$nodes",
+                            as: "node",
+                            in: {
+                                $mergeObjects: [
+                                    "$$node",
+                                    {
+                                        status: {
+                                            $let: {
+                                                vars: {
+                                                    matchedState: {
+                                                        $first: {
+                                                            $filter: {
+                                                                input: {
+                                                                    $ifNull: [
+                                                                        "$userFollowDoc.milestoneStates",
+                                                                        [],
+                                                                    ],
+                                                                },
+                                                                as: "ms",
+                                                                cond: {
+                                                                    $eq: [
+                                                                        "$$ms.milestoneId",
+                                                                        "$$node._id",
+                                                                    ],
+                                                                },
+                                                            },
+                                                        },
+                                                    },
+                                                },
+                                                in: {
+                                                    $ifNull: [
+                                                        "$$matchedState.status",
+                                                        "pending",
+                                                    ],
+                                                },
+                                            },
+                                        },
+                                    },
+                                ],
+                            },
+                        },
+                    },
+                },
+            },
+            {
+                $project: {
+                    followers: 0,
+                    userFollowDoc: 0,
+                },
+            }
+        );
+    } else {
         pipeline.push({
             $project: {
                 followers: 0,
+                userFollowDoc: 0,
                 nodes: 0,
                 edges: 0,
             },
         });
     }
-    else {
-        pipeline.push({
-            $project: {
-                followers: 0
-            }
-        })
-    }
 
     return pipeline;
 };
+
+
 
 export const getAllRoadmaps = asyncHandler(async (req, res) => {
     let roadmaps = [];
@@ -91,7 +187,12 @@ export const getRoadmapById = asyncHandler (async (req, res) => {
     }
     else {
         roadmap = await Roadmap.findById(req.params.id);
+        roadmap = roadmap.toObject()
         roadmap.isFollowed = false;
+        roadmap.nodes = roadmap.nodes.map((node) => ({
+            ...node,
+            status: "pending",
+        }));
     }
     if (!roadmap) {
         throw new ApiError(404, "Roadmap not found");
@@ -106,6 +207,7 @@ export const createRoadmap = async (req, res, next) => {
         await roadmap.save();
         res.status(201).json(roadmap);
     } catch (err) {
+        console.log(err)
         next(new ApiError(400, "Failed to create roadmap", [], err.stack));
     }
 };

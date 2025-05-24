@@ -47,20 +47,37 @@ export const unfollowRoadmap = asyncHandler (async (req, res) => {
 })
 
 export const updateMilestones = asyncHandler(async (req, res) => {
-  const {milestoneId, status} = req.body
-  const roadmap = await Roadmap.findById(req.params.id)
+  const { milestoneId, status } = req.body;
+  const roadmap = await Roadmap.findById(req.params.id);
+
   if (!roadmap) {
-    throw new ApiError (404, "Roadmap not found");
+    throw new ApiError(404, "Roadmap not found");
   }
-  await FollowedRoadmap.findOneAndUpdate({roadmapId: roadmap._id, userId: req.user._id}, {
-    $addToSet: {milestoneStates: {milestoneId, status}}
-  })
+
+  const followed = await FollowedRoadmap.findOne({
+    roadmapId: roadmap._id,
+    userId: req.user._id,
+  });
+
+  if (!followed) {
+    throw new ApiError(404, "Followed roadmap not found");
+  }
+
+  const index = followed.milestoneStates.findIndex(
+    (m) => m.milestoneId.toString() === milestoneId
+  );
+
+  if (index > -1) {
+    // Update existing milestone status
+    followed.milestoneStates[index].status = status;
+  } else {
+    // Add new milestone
+    followed.milestoneStates.push({ milestoneId, status });
+  }
+
+  await followed.save();
 
   res.status(200).json(
-    new ApiResponse(
-      200,
-      {},
-      "Milestone status updated"
-    )
-  )
+    new ApiResponse(200, {}, "Milestone status updated")
+  );
 });
