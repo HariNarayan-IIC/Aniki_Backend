@@ -25,7 +25,6 @@ const userSchema = new Schema({
     },
     password: {
         type: String, //Hashed password
-        required: true
     },
     isEmailVerified: {
         type: Boolean,

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { registerUser, loginUser, logoutUser, refreshAccessToken, isUsernameAvailable, isEmailAvailable, verifyEmail, validateOTP } from "../controllers/user.controller.js";
+import { registerUser, loginUser, logoutUser, refreshAccessToken, isUsernameAvailable, isEmailAvailable, verifyEmail, validateOTP, signUpWithGoogle } from "../controllers/user.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { body, checkExact } from "express-validator";
 import { ApiResponse } from "../utils/ApiResponse.js";
@@ -30,7 +30,10 @@ router.route("/register").post(
 
     registerUser
 )
-router.route("/login").post(loginUser)
+router.route("/login").post(
+    body('email').isEmail(),
+    loginUser
+)
 router.route("/refreshAccessToken").post(refreshAccessToken)
 router.route("/verify-email").post(
     body('email').isEmail(),
@@ -43,6 +46,10 @@ router.route("/validate-otp").post(
 )
 //Forgot password
 //signup with Google
+router.route("/signin-with-google").post(
+    body('credentialToken').isString().notEmpty(),
+    signUpWithGoogle
+)
 
 //secured routes
 router.route("/me").post(verifyJWT,(req, res)=> {
