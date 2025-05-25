@@ -4,10 +4,11 @@ import cookieParser from "cookie-parser"
 import errorHandler from "./middlewares/errorHandler.middleware.js"
 import logger from "./middlewares/logger.middleware.js"
 
+
 const app = express()
 
 //setup middlewares
-const allowedOrigins = [
+export const allowedOrigins = [
     "https://aniki-frontend.netlify.app",
     "http://localhost:5173", // if you want local frontend too
   ];
@@ -32,15 +33,16 @@ app.use(cookieParser())
 app.use(logger)
 
 //Dummy route for testing
-app.get("/", (req, res) => {
-    return res.status(200).send("<h1>Welcome to Aniki</h1>")
-})
+// app.get("/", (req, res) => {
+//     return res.status(200).send("<h1>Welcome to Aniki</h1>")
+// })
 
 
 //routes import 
 import userRouter from './routes/user.routes.js';
 import roadmapRouter from './routes/roadmap.routes.js';
 import followedRoadmapsRouter from './routes/followedRoadmap.routes.js'
+import chatRoomRouter from './routes/chatroom.routes.js'
 import { ApiError } from "./utils/ApiError.js";
 
 
@@ -48,6 +50,7 @@ import { ApiError } from "./utils/ApiError.js";
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/roadmap", roadmapRouter);
 app.use("/api/v1/followed-roadmaps", followedRoadmapsRouter);
+app.use("/api/v1/chat-rooms", chatRoomRouter)
 
 
 //error middleware must be placed after routes (Order of app.use matters)

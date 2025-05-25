@@ -43,7 +43,8 @@ const roadmapSchema = new Schema(
     followerCount: {
       type: Number,
       default: 0
-    }
+    },
+    chatRoomId: { type: mongoose.Schema.Types.ObjectId, ref: "ChatRoom" },
   },
   { timestamps: true }
 );
