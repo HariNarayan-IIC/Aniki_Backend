@@ -24,7 +24,7 @@ const buildRoadmapPipeline = (userId, matchId = null) => {
         },
         {
             $addFields: {
-                followerCount: { $size: "$followers" },
+                // followerCount: { $size: "$followers" },
                 isFollowed: {
                     $gt: [
                         {
@@ -187,7 +187,7 @@ export const getRoadmapById = asyncHandler (async (req, res) => {
     }
     else {
         roadmap = await Roadmap.findById(req.params.id);
-        roadmap = roadmap.toObject()
+        roadmap = roadmap.toObject();
         roadmap.isFollowed = false;
         roadmap.nodes = roadmap.nodes.map((node) => ({
             ...node,

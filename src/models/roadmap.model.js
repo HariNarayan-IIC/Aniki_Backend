@@ -40,6 +40,10 @@ const roadmapSchema = new Schema(
     },
     nodes: [nodeSchema],
     edges: [edgeSchema],
+    followerCount: {
+      type: Number,
+      default: 0
+    }
   },
   { timestamps: true }
 );

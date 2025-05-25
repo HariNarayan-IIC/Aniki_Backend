@@ -6,45 +6,88 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 
 export const followRoadmap = asyncHandler(async (req, res) => {
     const user = req.user;
-    const roadmap = await Roadmap.findById(req.params.id);
-    if (!roadmap) {
-        throw new ApiError(404, "Roadmap not found");
-    }
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-    if (
-        await FollowedRoadmap.findOne({ userId: user._id, roadmapId: roadmap._id })
-    ) {
-        throw new ApiError(400, "Roadmap already followed");
-    }
-    const newFollowedRoadmap = await FollowedRoadmap.create({
-        userId: user._id,
-        roadmapId: roadmap._id,
-        completedMilestones: [],
-    });
+    try {
+        const roadmap = await Roadmap.findById(req.params.id).session(session);
+        if (!roadmap) {
+            throw new ApiError(404, "Roadmap not found");
+        }
 
-    res.status(200).json(
-        new ApiResponse(
-            200,
-            { followedRoadmap: newFollowedRoadmap },
-            "Roadmap followed successfully"
-        )
-    );
+        const alreadyFollowed = await FollowedRoadmap.findOne({
+            userId: user._id,
+            roadmapId: roadmap._id,
+        }).session(session);
+
+        if (alreadyFollowed) {
+            throw new ApiError(400, "Roadmap already followed");
+        }
+
+        const newFollowedRoadmap = await FollowedRoadmap.create(
+            [{
+                userId: user._id,
+                roadmapId: roadmap._id,
+                completedMilestones: [],
+            }],
+            { session }
+        );
+
+        roadmap.followerCount++;
+        await roadmap.save({ session, validateBeforeSave: false });
+
+        await session.commitTransaction();
+        session.endSession();
+
+        res.status(200).json(
+            new ApiResponse(
+                200,
+                { followedRoadmap: newFollowedRoadmap[0] },
+                "Roadmap followed successfully"
+            )
+        );
+    } catch (error) {
+        await session.abortTransaction();
+        session.endSession();
+        throw error;
+    }
 });
 
-export const unfollowRoadmap = asyncHandler (async (req, res) => {
-  const roadmap = await Roadmap.findById(req.params.id)
-  if (!roadmap) {
-    throw new ApiError(404, "Roadmap not found");
-  }
-  await FollowedRoadmap.findOneAndDelete({userId: req.user._id, roadmapId: req.params.id})
-  res.status(200).json(
-    new ApiResponse(
-      200,
-      {},
-      "Roadmap unfollowed successfully"
-    )
-  )
-})
+
+export const unfollowRoadmap = asyncHandler(async (req, res) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+        const roadmap = await Roadmap.findById(req.params.id).session(session);
+        if (!roadmap) {
+            throw new ApiError(404, "Roadmap not found");
+        }
+
+        const deletedFollow = await FollowedRoadmap.findOneAndDelete({
+            userId: req.user._id,
+            roadmapId: req.params.id,
+        }).session(session);
+
+        if (!deletedFollow) {
+            throw new ApiError(400, "Roadmap not followed by user");
+        }
+
+        roadmap.followerCount = Math.max(0, roadmap.followerCount - 1);
+        await roadmap.save({ session, validateBeforeSave: false });
+
+        await session.commitTransaction();
+        session.endSession();
+
+        res.status(200).json(
+            new ApiResponse(200, {}, "Roadmap unfollowed successfully")
+        );
+    } catch (error) {
+        await session.abortTransaction();
+        session.endSession();
+        throw error;
+    }
+});
 
 export const updateMilestones = asyncHandler(async (req, res) => {
   const { milestoneId, status } = req.body;
