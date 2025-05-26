@@ -11,11 +11,6 @@ router.route("/register").post(
     body('*')
         .trim().notEmpty().withMessage("Field cannot be empty"),
 
-    body('username')
-        .isLength({min: 6}).withMessage("Username must be atleast 6 digit long")
-        .custom(isUsernameAvailable)
-        .matches(/^[a-zA-Z0-9_@]*$/).withMessage("Username can only contain A-Z, a-z , 0-9, _, @"),
-
     body('email').isEmail()
         .custom(isEmailAvailable),
 

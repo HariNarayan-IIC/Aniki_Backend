@@ -9,17 +9,19 @@ export default function chatHandler(io, socket) {
     socket.on("chatMessage", async({roomId, message}) => {
         try {
             const userId = socket.user._id;
+            const username = socket.user.username;
 
             const chatMsg = new ChatMessage({
                 roomId,
                 userId,
                 message,
+                username
             })
 
             await chatMsg.save();
 
             io.to(roomId).emit("chatMessage", {
-                userId,
+                username,
                 message,
                 timestamp: chatMsg.createdAt,
             });

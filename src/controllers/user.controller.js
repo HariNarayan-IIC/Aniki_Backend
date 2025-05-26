@@ -92,11 +92,11 @@ const registerUser = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Invalid input data", result.array());
     }
     //Get user details
-    const { fullName, email, username, password } = req.body;
+    const { fullName, email, password } = req.body;
 
     //validation - not empty
     if (
-        [fullName, email, username, password].some(
+        [fullName, email, password].some(
             (field) => field?.trim() === ""
         )
     ) {
@@ -104,12 +104,13 @@ const registerUser = asyncHandler(async (req, res) => {
     }
 
     //check if already exists: username, email
-    const existedUser = await User.findOne({
-        $or: [{ username }, { email }],
-    });
+    const existedUser = await User.findOne({email});
     if (existedUser) {
-        throw new ApiError(409, "User with email or username already exists");
+        throw new ApiError(409, "User with email already exists");
     }
+
+    //generate username
+    const username=  await generateUniqueUsername(fullName);
 
     //Verify email using otp
     //Save user detail in db

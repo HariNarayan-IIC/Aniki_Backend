@@ -6,6 +6,10 @@ const chatMessageSchema = new Schema({
         ref: "ChatRoom", 
         required: true 
     },
+    username: {
+        type: String,
+        required: true
+    },
     userId: { 
         type: Schema.Types.ObjectId, 
         ref: "User", 
@@ -15,6 +19,15 @@ const chatMessageSchema = new Schema({
         type: String, 
         required: true 
     },
+    upvotes: {
+        type: Number,
+        default: 0
+    },
+    replied_to: {
+        type: Schema.Types.ObjectId,
+        ref: "ChatMessage",
+        default: null
+    }
 }, { timestamps: true });
 
 export default model("ChatMessage", chatMessageSchema);
