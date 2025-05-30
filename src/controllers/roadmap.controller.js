@@ -1,4 +1,5 @@
 import { Roadmap } from "../models/roadmap.model.js";
+import ChatRoom from "../models/chatRoom.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import mongoose from "mongoose";
@@ -202,12 +203,27 @@ export const getRoadmapById = asyncHandler (async (req, res) => {
 
 export const createRoadmap = async (req, res, next) => {
     try {
-        const { name, description, nodes, edges } = req.body;
-        const roadmap = new Roadmap({ name, description, nodes, edges });
+        const { name, description, nodes, edges, style } = req.body;
+
+        // Create and save the roadmap
+        const roadmap = new Roadmap({ name, description, nodes, edges, style });
         await roadmap.save();
+
+        // Create and save the associated chat room
+        const chatRoom = new ChatRoom({
+            name: `${name} Chat`,
+            type: 'roadmap',
+            roadmapId: roadmap._id,
+        });
+        await chatRoom.save();
+
+        // Link chatRoomId back to the roadmap
+        roadmap.chatRoomId = chatRoom._id;
+        await roadmap.save();
+
         res.status(201).json(roadmap);
     } catch (err) {
-        console.log(err)
+        console.error(err);
         next(new ApiError(400, "Failed to create roadmap", [], err.stack));
     }
 };
@@ -227,6 +243,7 @@ export const updateRoadmap = async (req, res, next) => {
         }
         res.json(roadmap);
     } catch (err) {
+        console.log(err)
         next(new ApiError(400, "Failed to update roadmap", [], err.stack));
     }
 };
