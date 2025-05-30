@@ -1,8 +1,8 @@
-// import dotenv from "dotenv";
+import dotenv from 'dotenv';
+dotenv.config({ path: '../../.env' });
+const apiKey = process.env.GEMINI_API_KEY;
 import { GoogleGenAI } from "@google/genai";
-const ai = new GoogleGenAI({ apiKey: "AIzaSyBmdOXKgvPiTQwsGuKL5oogxMij1Nhlpog" });
-// dotenv.config();
-// console.log("KEY:", process.env.GEMINI_API_KEY);
+const ai = new GoogleGenAI({ apiKey: apiKey });
 
 // Example dummy data (replace with DB data)
 const followedRoadmaps = ["Web Development", "Data Science"];
@@ -14,7 +14,8 @@ Avoid giving medical, political, or unrelated advice.
 Encourage interactive learning, collaboration, and self-growth.
 
 The user is currently following these learning roadmaps: ${followedRoadmaps.join(", ")}.
-Whenever relevant, personalize responses to help the user in these areas. The response should be concise, clear, and actionable and should not be too long as it will be used in a chatbot. Your main audience is Indian students, so also include suggestions like learning resources and tools that are also popular and available in Hindi
+Whenever relevant, personalize responses to help the user in these areas. The response should be concise, clear, and actionable and should not be too long as it will be used in a chatbot. 
+Your main audience is Indian students, so also include suggestions like learning resources and tools that are also popular and available in Hindi alongwith other good sources.
 `;
 
 
@@ -23,7 +24,7 @@ export async function askGemini(userInput) {
 
   try {
     const response = await ai.models.generateContent({
-      model: "models/gemini-2.0-flash", // must use the full model path!
+      model: "models/gemini-2.0-flash",
       contents: [{ role: "user", parts: [{ text: fullPrompt }] }],
     });
 
