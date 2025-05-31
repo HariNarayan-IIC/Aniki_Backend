@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getAllChatRooms, createChatRoom } from '../controllers/chatroom.controller.js';
+import { getAllChatRooms, createChatRoom, getAllMessages } from '../controllers/chatroom.controller.js';
 import { body } from 'express-validator';
 
 
@@ -11,6 +11,7 @@ router.route('/').post(
     body('name').isString().notEmpty(),
     createChatRoom
 );
+router.route('/:roomId').get(getAllMessages);
 
 
 export default router;
