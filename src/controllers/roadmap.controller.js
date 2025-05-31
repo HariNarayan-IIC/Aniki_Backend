@@ -73,9 +73,16 @@ const buildRoadmapPipeline = (userId, matchId = null) => {
                             $cond: [
                                 { $gt: [{ $size: "$nodes" }, 0] },
                                 {
-                                    $divide: [
-                                        { $size: "$$matchedMilestones" },
-                                        { $size: "$nodes" },
+                                    $round: [
+                                        {
+                                            $divide: [
+                                                {
+                                                    $size: "$$matchedMilestones",
+                                                },
+                                                { $size: "$nodes" },
+                                            ],
+                                        },
+                                        2, // <- Rounds to two decimal places
                                     ],
                                 },
                                 0,
@@ -159,8 +166,6 @@ const buildRoadmapPipeline = (userId, matchId = null) => {
     return pipeline;
 };
 
-
-
 export const getAllRoadmaps = asyncHandler(async (req, res) => {
     let roadmaps = [];
     const user = req.user;
@@ -177,16 +182,15 @@ export const getAllRoadmaps = asyncHandler(async (req, res) => {
     res.json(roadmaps);
 });
 
-export const getRoadmapById = asyncHandler (async (req, res) => {
+export const getRoadmapById = asyncHandler(async (req, res) => {
     let roadmap;
-    if (req.user){
+    if (req.user) {
         const pipeline = buildRoadmapPipeline(req.user._id, req.params.id);
         const result = await Roadmap.aggregate(pipeline);
         if (result.length > 0) {
-            roadmap = result[0]
+            roadmap = result[0];
         }
-    }
-    else {
+    } else {
         roadmap = await Roadmap.findById(req.params.id);
         roadmap = roadmap.toObject();
         roadmap.isFollowed = false;
@@ -212,7 +216,7 @@ export const createRoadmap = async (req, res, next) => {
         // Create and save the associated chat room
         const chatRoom = new ChatRoom({
             name: `${name} Chat`,
-            type: 'roadmap',
+            type: "roadmap",
             roadmapId: roadmap._id,
         });
         await chatRoom.save();
@@ -243,16 +247,20 @@ export const updateRoadmap = async (req, res, next) => {
         }
         res.json(roadmap);
     } catch (err) {
-        console.log(err)
+        console.log(err);
         next(new ApiError(400, "Failed to update roadmap", [], err.stack));
     }
 };
 
 export const deleteRoadmap = asyncHandler(async (req, res) => {
-    const roadmap = await Roadmap.findByIdAndDelete(req.params.id);
+    const roadmap = await Roadmap.findById(req.params.id);
     if (!roadmap) {
         throw new ApiError(404, "Roadmap not found");
     }
+    if (roadmap.followerCount > 0) {
+        throw new ApiError(400, "Cannot delete Roadmap with followers");
+    }
+    await Roadmap.findByIdAndDelete(roadmap._id);
+    await ChatRoom.findByIdAndDelete(roadmap.chatRoomId);
     res.json({ message: "Roadmap deleted" });
 });
-
